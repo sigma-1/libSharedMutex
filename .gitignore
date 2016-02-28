@@ -26,3 +26,16 @@
 *.exe
 *.out
 *.app
+
+
+
+*~
+.DS_Store
+.project
+.pydevproject
+.settings
+.cproject
+*.pyc
+\#*
+.\#*
+
