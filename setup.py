@@ -168,7 +168,10 @@ class CPPLibPackage():
         build_dir = os.path.join(self.externalLibDir_.ext_build, self.name_, verName)
         fn = os.path.basename(url)
         fn_noex = fn.replace(".tar.gz", "").replace(".tar.bz2", "").replace(".git", "")
-        build_sub_dir = os.path.join(self.externalLibDir_.ext_build, self.name_, verName, fn_noex)
+        if str(fn).endswith(".git"):
+            build_sub_dir = os.path.join(self.externalLibDir_.ext_build, self.name_, verName, self.name_)
+        else:
+            build_sub_dir = os.path.join(self.externalLibDir_.ext_build, self.name_, verName, fn_noex)
         local_dir = os.path.join(self.externalLibDir_.install_dir, self.name_, verName, self.name_)
         self.versions_[verName] = CPPLibPackageVersion(self.name_, verName,BuildPaths(url, build_dir, build_sub_dir, local_dir), depends)
     
@@ -238,7 +241,8 @@ class Packages():
         buildCmd = ""
         pack = CPPLibPackage(name, buildCmd, self.dirMaster_, "git-headeronly", "master")
         pack.addHeaderOnlyVersion(url, "master")
-        pack.versions_["master"].additionalLdFlags_ = ["-lrt"]
+        if not Utils.isMac():
+            pack.versions_["master"].additionalLdFlags_ = ["-lrt"]
         return pack
     
     def __pstreams(self):
@@ -284,7 +288,9 @@ class Packages():
         pack.versions_["1.3.3"].additionalIncludePaths_.append(pack.versions_["1.3.3"].includePath_ + "/libmongoc-1.0")
         pack.versions_["1.3.3"].includePath_ = pack.versions_["1.3.3"].includePath_ + "/libbson-1.0"
         pack.versions_["1.3.3"].altLibName_ = "ssl" #a trick to control order of -l flags for libs
-        pack.versions_["1.3.3"].additionalLdFlags_ = ["-lcrypto","-lmongoc-1.0", "-lbson-1.0", "-lrt"]  
+        pack.versions_["1.3.3"].additionalLdFlags_ = ["-lcrypto","-lmongoc-1.0", "-lbson-1.0"]  
+        if not Utils.isMac():
+            pack.versions_["1.3.3"].additionalLdFlags_.append("-lrt") 
         return pack
     
     def __mongocxx(self):
@@ -453,7 +459,7 @@ class Packages():
         return pack
     
     def __bibseqDev(self):
-        url = "https://github.com/bailey-lab/bibseqPrivate.git"
+        url = "git@github.com:bailey-lab/bibseqPrivate.git"
         name = "bibseqDev"
         buildCmd = self.__bibProjectBuildCmd()
         pack = CPPLibPackage(name, buildCmd, self.dirMaster_, "git", "master")
@@ -491,7 +497,7 @@ class Packages():
         return pack
     
     def __SeekDeepDev(self):
-        url = "https://github.com/bailey-lab/SeekDeepPrivate.git"
+        url = "git@github.com:bailey-lab/SeekDeepPrivate.git"
         name = "SeekDeepDev"
         buildCmd = self.__bibProjectBuildCmd()
         pack = CPPLibPackage(name, buildCmd, self.dirMaster_, "git", "master")
@@ -522,10 +528,14 @@ class Packages():
         buildCmd = self.__bibProjectBuildCmd()
         pack = CPPLibPackage(name, buildCmd, self.dirMaster_, "git", "2.2.1")
         pack.addVersion(url, "develop",[LibNameVer("jsoncpp", "1.6.5"),LibNameVer("boost", "1_60_0"),LibNameVer("cppitertools", "v0.1"),LibNameVer("pstreams", "RELEASE_0_8_1")])
-        pack.versions_["develop"].additionalLdFlags_ = ["-lpthread", "-lz", "-lrt"] 
+        pack.versions_["develop"].additionalLdFlags_ = ["-lpthread", "-lz"]
+        if not Utils.isMac():
+            pack.versions_["develop"].additionalLdFlags_.append("-lrt")
         pack.addVersion(url, "2.2.1",[LibNameVer("jsoncpp", "1.6.5"),LibNameVer("boost", "1_58_0"),LibNameVer("cppitertools", "v0.1"),LibNameVer("pstreams", "RELEASE_0_8_1")])
-        pack.versions_["2.2.1"].additionalLdFlags_ = ["-lpthread", "-lz", "-lrt"]         
-        return pack#lcurl,"-lpthread", "-lz", "-lrt"
+        pack.versions_["2.2.1"].additionalLdFlags_ = ["-lpthread", "-lz"]   
+        if not Utils.isMac():
+            pack.versions_["2.2.1"].additionalLdFlags_.append("-lrt")  
+        return pack
 
     def __boost(self):
         name = "boost"

@@ -29,7 +29,6 @@ class genHelper:
             #f.write("CXXFLAGS = -std=c++11\n")
             f.write("CXXFLAGS = -std=c++14\n")
             f.write("CXXFLAGS += -Wall -ftemplate-depth=1024\n")
-            f.write("CXXFLAGS = -std=c++14\n")
             if "" != ldFlags:
                 f.write("LD_FLAGS = ")
                 if not ldFlags.startswith("-"):
