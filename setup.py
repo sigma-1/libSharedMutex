@@ -1226,7 +1226,7 @@ def main():
             cmd = "echo >> ~/.bash_completion && cat ./etc/bash_completion.d/* >> ~/.bash_completion"
             Utils.run(cmd)
     else:
-        if len(s.setUpsNeeded) == 0:
+        if len(s.setUpsNeeded) == 0 and not args.compfile:
             s.printAvailableSetUps()
             return 1
         else:
