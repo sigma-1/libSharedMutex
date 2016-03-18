@@ -25,6 +25,8 @@ LIB_DIR=$(ROOT)/lib
 LIBNAME = $(addsuffix $(CXXOUTNAME), lib)
 DYLIB = $(addprefix $(addsuffix $(LIBNAME), $(LIB_DIR)/), .dylib)
 SOLIB = $(addprefix $(addsuffix $(LIBNAME), $(LIB_DIR)/), .so)
+## Etc Directory
+ETC_DIR = etc
 
 ##Phony Targets
 .PHONY: all
@@ -142,7 +144,7 @@ cpHeaders: $(INSTALL_DIR)
 	
 ### Copy etc folder if it exists 
 cpEtc: $(INSTALL_DIR)
-ifneq ("$(wildcard $(PATH_TO_FILE))","")
+ifneq ("$(wildcard $(ETC_DIR))","")
 	scripts/setUpScripts/installEtc.py -etcFolder etc/ -dest $(INSTALL_DIR)/ -rmDir
 endif
 
