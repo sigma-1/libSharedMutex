@@ -18,17 +18,18 @@ BuildPaths = namedtuple("BuildPaths", 'url build_dir build_sub_dir local_dir')
 
 
 def fixDyLibOnMac(libDir):
-        files = os.listdir(libDir)
-        for file in files:
-            if os.path.isfile(file) and str(file).endswith(".dylib"):
-                try:
-                    cmd = "install_name_tool -id {full_libpath} {full_libpath}".format(full_libpath = os.path.abspath(file))
-                    Utils.run(cmd)
-                except Exception,e:
-                    print (e)
-                    print ("Failed to fix dylib for {path}".format(path = os.path.abspath(file)))
-            elif os.path.isdir(file):
-                fixDyLibOnMac(file)
+    files = os.listdir(libDir)
+    for file in files:
+        fullFile = os.path.join(libDir, file)
+        if os.path.isfile(fullFile) and str(fullFile).endswith(".dylib"):
+            try:
+                cmd = "install_name_tool -id {full_libpath} {full_libpath}".format(full_libpath = os.path.abspath(fullFile))
+                Utils.run(cmd)
+            except Exception,e:
+                print (e)
+                print ("Failed to fix dylib for {path}".format(path = os.path.abspath(fullFile)))
+        elif os.path.isdir(fullFile):
+            fixDyLibOnMac(fullFile)
 
 def runAndCapture(cmd):
     # print CT.boldRed("before process")
