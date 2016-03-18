@@ -27,7 +27,8 @@ def fixDyLibOnMac(libDir):
                 except Exception,e:
                     print (e)
                     print ("Failed to fix dylib for {path}".format(path = os.path.abspath(file)))
-
+            elif os.path.isdir(file):
+                fixDyLibOnMac(file)
 
 def runAndCapture(cmd):
     # print CT.boldRed("before process")
