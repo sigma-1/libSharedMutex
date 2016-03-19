@@ -523,7 +523,7 @@ class Packages():
         name = "seqServer"
         buildCmd = self.__bibProjectBuildCmd()
         pack = CPPLibPackage(name, buildCmd, self.dirMaster_, "git", "1.2.1")
-        pack.addVersion(url, "develop",[LibNameVer("bibseq", "develop"),LibNameVer("cppcms", "1.0.5")])
+        pack.addVersion(url, "develop",[LibNameVer("bibseqmaster", "develop"),LibNameVer("cppcms", "1.0.5")])
         pack.addVersion(url, "1.2.1",[LibNameVer("bibseq", "2.2.1"),LibNameVer("cppcms", "1.0.5")])
         return pack
     
