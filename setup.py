@@ -535,6 +535,7 @@ class Packages():
         pack = CPPLibPackage(name, buildCmd, self.dirMaster_, "git", "2.2.1")
         pack.addVersion(url, "develop",[LibNameVer("bibseq", "develop"),LibNameVer("njhRInside", "develop"),LibNameVer("seqServer", "develop")])
         pack.addVersion(url, "2.2.1",[LibNameVer("bibseq", "2.2.1"),LibNameVer("njhRInside", "1.1.1"),LibNameVer("seqServer", "1.2.1")])
+        pack.addVersion(url, "release_v2.3.0",[LibNameVer("bibseq", "release_v2.3.0"),LibNameVer("seqServer", "release_v1.3.0")])
         return pack
     
     def __SeekDeepDev(self):
@@ -552,6 +553,7 @@ class Packages():
         pack = CPPLibPackage(name, buildCmd, self.dirMaster_, "git", "1.2.1")
         pack.addVersion(url, "develop",[LibNameVer("bibseqdev", "master"),LibNameVer("cppcms", "1.0.5")])
         pack.addVersion(url, "1.2.1",[LibNameVer("bibseq", "2.2.1"),LibNameVer("cppcms", "1.0.5")])
+        pack.addVersion(url, "release__v1.3.0",[LibNameVer("bibseq", "release_v2.3.0"),LibNameVer("cppcms", "1.0.5")])
         return pack
     
     def __njhRInside(self):
