@@ -525,6 +525,7 @@ class Packages():
         pack = CPPLibPackage(name, buildCmd, self.dirMaster_, "git", "v0.1")
         pack.addVersion(url, "develop")
         pack.addVersion(url, "v0.1")
+        pack.addVersion(url, "release__v0.2")
         return pack 
       
     def __SeekDeep(self):
@@ -1050,7 +1051,7 @@ class Setup:
         print "cloning from {url}".format(url=bPath.url)
         cCmd = "git clone -b {branch} {url} {d}".format(branch = packVer.nameVer_.version.replace("__", "/"),url=bPath.url, d=bPath.local_dir)
         try:
-            Utils.run_in_dir(cCmd)
+            Utils.run(cCmd)
         except Exception, e:
             print e
             print "failed to clone branch {branch} from {url}".format(branch = packVer.nameVer_.version.replace("__", "/"), url=bPath.url)
@@ -1214,7 +1215,7 @@ class Setup:
         self.__defaultBibBuild("njhrinside", version)
         
     def cppprogutils(self, version):
-        self.__defaultBuild("cppprogutils", version)
+        self.__defaultBibBuild("cppprogutils", version)
     
     def jsoncpp(self, version):
         self.__defaultBuild("jsoncpp", version)
