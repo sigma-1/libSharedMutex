@@ -477,9 +477,6 @@ class Packages():
         pack.addHeaderOnlyVersion(url, "v2.0.0")
         pack.versions_["v2.0.0"].additionalLdFlags_ = ["-lpthread"]
         pack.versions_["v2.0.0"].includePath_ = os.path.join(name, "v2.0.0", name)
-        pack.addHeaderOnlyVersion(url, "v2.0.1")
-        pack.versions_["v2.0.1"].additionalLdFlags_ = ["-lpthread"]
-        pack.versions_["v2.0.1"].includePath_ = os.path.join(name, "v2.0.1", name)
         return pack
     
     def __bibseq(self):
@@ -521,7 +518,7 @@ class Packages():
         pack = CPPLibPackage(name, buildCmd, self.dirMaster_, "git", "v2.0.1")
         pack.addVersion(url, "develop",[LibNameVer("cppitertools", "v0.1"),LibNameVer("cppprogutils", "develop")])
         pack.addVersion(url, "v2.0.0",[LibNameVer("cppitertools", "v0.1"),LibNameVer("cppprogutils", "v2.0.0")])
-        pack.addVersion(url, "v2.0.1",[LibNameVer("cppitertools", "v0.1"),LibNameVer("cppprogutils", "v2.0.1")])
+        pack.addVersion(url, "v2.0.1",[LibNameVer("cppitertools", "v0.1"),LibNameVer("cppprogutils", "v2.0.0")])
         return pack
     
     def __sharedMutex(self):
