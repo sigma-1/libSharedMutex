@@ -9,9 +9,9 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "scripts/setUpScripts"))
 from utils import Utils
 from genFuncs import genHelper 
 from color_text import ColorText as CT
+import pickle
 
 #tuples
-
 BuildPaths = namedtuple("BuildPaths", 'url build_dir build_sub_dir local_dir')
 LibNameVer = namedtuple("LibNameVer", 'name version')
 GitRefs = namedtuple("GitRefs", "branches tags")
@@ -24,10 +24,12 @@ class LibDirMaster():
         self.ext_tars = os.path.join(self.base_dir, "tarballs") #location to keep tarballs of programs/libraries downloads
         self.ext_build = os.path.join(self.base_dir, "build") #location for the building of programs/libraries
         self.install_dir = os.path.join(self.base_dir, "local") #location for the final install of programs/libraries
+        self.cache_dir = os.path.join(self.base_dir, ".cache")
         
         Utils.mkdir(self.ext_tars) #tar storage directory
         Utils.mkdir(self.ext_build) #build directory
         Utils.mkdir(self.install_dir) #local directory
+        Utils.mkdir(self.cache_dir) #cache directory
 
 def joinNameVer(libNameVerTup):
     return os.path.join(libNameVerTup.name, libNameVerTup.version, libNameVerTup.name)
@@ -253,10 +255,23 @@ class Packages():
         url = 'https://github.com/weng-lab/zi_lib.git'
         buildCmd = ""
         pack = CPPLibPackage(name, buildCmd, self.dirMaster_, "git-headeronly", "master")
-        pack.addHeaderOnlyVersion(url, "master")
-        pack.versions_["master"].includePath_ = os.path.join(name, "master", name)
-        if not Utils.isMac():
-            pack.versions_["master"].additionalLdFlags_ = ["-lrt"]
+        if self.args.noInternet:
+            with open(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl'), 'rb') as input:
+                pack = pickle.load(input)
+        elif os.path.exists(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl')):
+            with open(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl'), 'rb') as input:
+                    pack = pickle.load(input)
+        else:
+            pack = CPPLibPackage(name, buildCmd, self.dirMaster_, "git-headeronly", "v0.1")
+            refs = pack.getGitRefs(url)
+            for ref in refs.branches + refs.tags:
+                pack.addHeaderOnlyVersion(url, ref)
+                pack.versions_[ref].includePath_ = os.path.join(name, ref, name)
+                if not Utils.isMac():
+                    pack.versions_[ref].additionalLdFlags_ = ["-lrt"]
+            Utils.mkdir(os.path.join(self.dirMaster_.cache_dir, name))
+            with open(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl'), 'wb') as output:
+                pickle.dump(pack, output, pickle.HIGHEST_PROTOCOL)
         return pack
     
     def __pstreams(self):
@@ -264,8 +279,20 @@ class Packages():
         url = 'https://github.com/nickjhathaway/pstreams.git'
         buildCmd = ""
         pack = CPPLibPackage(name, buildCmd, self.dirMaster_, "git-headeronly", "RELEASE_0_8_1")
-        pack.addHeaderOnlyVersion(url, "master")
-        pack.addHeaderOnlyVersion(url, "RELEASE_0_8_1")
+        if self.args.noInternet:
+            with open(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl'), 'rb') as input:
+                pack = pickle.load(input)
+        elif os.path.exists(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl')):
+            with open(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl'), 'rb') as input:
+                    pack = pickle.load(input)
+        else:
+            pack = CPPLibPackage(name, buildCmd, self.dirMaster_, "git-headeronly", "v0.1")
+            refs = pack.getGitRefs(url)
+            for ref in refs.branches + refs.tags:
+                pack.addHeaderOnlyVersion(url, ref)
+            Utils.mkdir(os.path.join(self.dirMaster_.cache_dir, name))
+            with open(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl'), 'wb') as output:
+                pickle.dump(pack, output, pickle.HIGHEST_PROTOCOL)
         return pack
 
     def __bamtools(self):
@@ -273,12 +300,22 @@ class Packages():
         name = "bamtools"
         buildCmd = "mkdir -p build && cd build && CC={CC} CXX={CXX} cmake -DCMAKE_INSTALL_PREFIX:PATH={local_dir} .. && make -j {num_cores} install"
         pack = CPPLibPackage(name, buildCmd, self.dirMaster_, "git", "v2.4.0")
-        pack.addVersion(url, "v2.4.0")
-        pack.versions_["v2.4.0"].libPath_ = os.path.join(pack.versions_["v2.4.0"].libPath_,name)
-        pack.versions_["v2.4.0"].includePath_ = os.path.join(pack.versions_["v2.4.0"].includePath_,name)
-        pack.addVersion(url, "v2.3.0")
-        pack.versions_["v2.3.0"].libPath_ = os.path.join(pack.versions_["v2.3.0"].libPath_,name)
-        pack.versions_["v2.3.0"].includePath_ = os.path.join(pack.versions_["v2.3.0"].includePath_,name)
+        if self.args.noInternet:
+            with open(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl'), 'rb') as input:
+                pack = pickle.load(input)
+        elif os.path.exists(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl')):
+            with open(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl'), 'rb') as input:
+                    pack = pickle.load(input)
+        else:
+            pack = CPPLibPackage(name, buildCmd, self.dirMaster_, "git-headeronly", "v0.1")
+            refs = pack.getGitRefs(url)
+            for ref in refs.branches + refs.tags:
+                pack.addVersion(url, ref)
+                pack.versions_[ref].libPath_ = os.path.join(pack.versions_[ref].libPath_,name)
+                pack.versions_[ref].includePath_ = os.path.join(pack.versions_[ref].includePath_,name)
+            Utils.mkdir(os.path.join(self.dirMaster_.cache_dir, name))
+            with open(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl'), 'wb') as output:
+                pickle.dump(pack, output, pickle.HIGHEST_PROTOCOL)
         return pack
     
     def __jsoncpp(self):
@@ -286,9 +323,20 @@ class Packages():
         name = "jsoncpp"
         buildCmd = "mkdir -p build && cd build && CC={CC} CXX={CXX} cmake -DCMAKE_CXX_FLAGS=-fPIC -DCMAKE_EXE_LINKER_FLAGS=-fPIC -DCMAKE_INSTALL_PREFIX:PATH={local_dir} ..  && make -j {num_cores} install"
         pack = CPPLibPackage(name, buildCmd, self.dirMaster_, "git", "1.7.1")
-        pack.addVersion(url, "1.6.5")
-        pack.addVersion(url, "1.7.1")
-        pack.addVersion(url, "master")
+        if self.args.noInternet:
+            with open(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl'), 'rb') as input:
+                pack = pickle.load(input)
+        elif os.path.exists(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl')):
+            with open(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl'), 'rb') as input:
+                    pack = pickle.load(input)
+        else:
+            pack = CPPLibPackage(name, buildCmd, self.dirMaster_, "git-headeronly", "v0.1")
+            refs = pack.getGitRefs(url)
+            for ref in refs.branches + refs.tags:
+                pack.addVersion(url, ref)
+            Utils.mkdir(os.path.join(self.dirMaster_.cache_dir, name))
+            with open(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl'), 'wb') as output:
+                pickle.dump(pack, output, pickle.HIGHEST_PROTOCOL)
         return pack
     
     def __mongoc(self):
@@ -334,9 +382,20 @@ class Packages():
         url = 'https://github.com/ryanhaining/cppitertools.git'
         name = "cppitertools"
         buildCmd = ""
-        pack = CPPLibPackage(name, buildCmd, self.dirMaster_, "git-headeronly", "v0.1")
-        pack.addHeaderOnlyVersion(url, "master")
-        pack.addHeaderOnlyVersion(url, "v0.1")
+        if self.args.noInternet:
+            with open(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl'), 'rb') as input:
+                pack = pickle.load(input)
+        elif os.path.exists(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl')):
+            with open(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl'), 'rb') as input:
+                    pack = pickle.load(input)
+        else:
+            pack = CPPLibPackage(name, buildCmd, self.dirMaster_, "git-headeronly", "v0.1")
+            refs = pack.getGitRefs(url)
+            for ref in refs.branches + refs.tags:
+                pack.addHeaderOnlyVersion(url, ref)
+            Utils.mkdir(os.path.join(self.dirMaster_.cache_dir, name))
+            with open(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl'), 'wb') as output:
+                pickle.dump(pack, output, pickle.HIGHEST_PROTOCOL)
         return pack
 
     def __catch(self):
@@ -344,8 +403,21 @@ class Packages():
         name = "catch"
         buildCmd = ""
         pack = CPPLibPackage(name, buildCmd, self.dirMaster_, "git-headeronly", "v1.3.3")
-        pack.addHeaderOnlyVersion(url, "v1.3.3")
-        pack.versions_["v1.3.3"].includePath_ = os.path.join(joinNameVer(pack.versions_["v1.3.3"].nameVer_), "single_include")
+        if self.args.noInternet:
+            with open(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl'), 'rb') as input:
+                pack = pickle.load(input)
+        elif os.path.exists(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl')):
+            with open(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl'), 'rb') as input:
+                    pack = pickle.load(input)
+        else:
+            pack = CPPLibPackage(name, buildCmd, self.dirMaster_, "git-headeronly", "v0.1")
+            refs = pack.getGitRefs(url)
+            for ref in refs.branches + refs.tags:
+                pack.addHeaderOnlyVersion(url, ref)
+                pack.versions_[ref].includePath_ = os.path.join(joinNameVer(pack.versions_[ref].nameVer_), "single_include")
+            Utils.mkdir(os.path.join(self.dirMaster_.cache_dir, name))
+            with open(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl'), 'wb') as output:
+                pickle.dump(pack, output, pickle.HIGHEST_PROTOCOL)
         return pack
 
     def __r(self):
@@ -468,17 +540,23 @@ class Packages():
         name = "cppprogutils"
         buildCmd = ""
         pack = CPPLibPackage(name, buildCmd, self.dirMaster_, "git-headeronly", "v2.0.0")
-        pack.bibProject_ = True
-        pack.addHeaderOnlyVersion(url, "develop")
-        pack.versions_["develop"].additionalLdFlags_ = ["-lpthread"]
-        pack.versions_["develop"].includePath_ = os.path.join(name, "develop", name)
-        pack.addHeaderOnlyVersion(url, "1.0")
-        pack.versions_["1.0"].additionalLdFlags_ = ["-lpthread"]
-        pack.versions_["1.0"].includePath_ = os.path.join(name, "1.0", name)
-        pack.addHeaderOnlyVersion(url, "v2.0.0")
-        pack.versions_["v2.0.0"].additionalLdFlags_ = ["-lpthread"]
-        pack.versions_["v2.0.0"].includePath_ = os.path.join(name, "v2.0.0", name)
-        
+        #pack.bibProject_ = True
+        if self.args.noInternet:
+            with open(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl'), 'rb') as input:
+                pack = pickle.load(input)
+        elif os.path.exists(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl')):
+            with open(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl'), 'rb') as input:
+                    pack = pickle.load(input)
+        else:
+            pack = CPPLibPackage(name, buildCmd, self.dirMaster_, "git-headeronly", "v0.1")
+            refs = pack.getGitRefs(url)
+            for ref in refs.branches + refs.tags:
+                pack.addHeaderOnlyVersion(url, ref)
+                pack.versions_[ref].additionalLdFlags_ = ["-lpthread"]
+                pack.versions_[ref].includePath_ = os.path.join(name, ref, name)
+            Utils.mkdir(os.path.join(self.dirMaster_.cache_dir, name))
+            with open(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl'), 'wb') as output:
+                pickle.dump(pack, output, pickle.HIGHEST_PROTOCOL)
         return pack
     
     def __bibseq(self):
@@ -487,14 +565,21 @@ class Packages():
         buildCmd = self.__bibProjectBuildCmd()
         pack = CPPLibPackage(name, buildCmd, self.dirMaster_, "git", "v2.3.0")
         pack.bibProject_ = True
-        pack.addVersion(url, "develop")
-        pack.versions_["develop"].additionalLdFlags_ = ["-lcurl"] 
-        
-        pack.addVersion(url, "v2.3.0")
-        pack.versions_["v2.3.0"].additionalLdFlags_ = ["-lcurl"] 
-        
-        pack.addVersion(url, "v2.3.1")
-        pack.versions_["v2.3.1"].additionalLdFlags_ = ["-lcurl"] 
+        if self.args.noInternet:
+            with open(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl'), 'rb') as input:
+                pack = pickle.load(input)
+        elif os.path.exists(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl')):
+            with open(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl'), 'rb') as input:
+                    pack = pickle.load(input)
+        else:
+            pack = CPPLibPackage(name, buildCmd, self.dirMaster_, "git-headeronly", "v0.1")
+            refs = pack.getGitRefs(url)
+            for ref in refs.branches + refs.tags:
+                pack.addVersion(url, ref)
+                pack.versions_[ref].additionalLdFlags_ = ["-lcurl"]
+            Utils.mkdir(os.path.join(self.dirMaster_.cache_dir, name))
+            with open(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl'), 'wb') as output:
+                pickle.dump(pack, output, pickle.HIGHEST_PROTOCOL)
         return pack
     
     def __bibseqDev(self):
@@ -503,8 +588,21 @@ class Packages():
         buildCmd = self.__bibProjectBuildCmd()
         pack = CPPLibPackage(name, buildCmd, self.dirMaster_, "git", "master")
         pack.bibProject_ = True
-        pack.addVersion(url, "master")
-        pack.versions_["master"].additionalLdFlags_ = ["-lcurl"]
+        if self.args.noInternet:
+            with open(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl'), 'rb') as input:
+                pack = pickle.load(input)
+        elif os.path.exists(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl')):
+            with open(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl'), 'rb') as input:
+                    pack = pickle.load(input)
+        else:
+            pack = CPPLibPackage(name, buildCmd, self.dirMaster_, "git-headeronly", "v0.1")
+            refs = pack.getGitRefs(url)
+            for ref in refs.branches + refs.tags:
+                pack.addVersion(url, ref)
+                pack.versions_[ref].additionalLdFlags_ = ["-lcurl"]
+            Utils.mkdir(os.path.join(self.dirMaster_.cache_dir, name))
+            with open(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl'), 'wb') as output:
+                pickle.dump(pack, output, pickle.HIGHEST_PROTOCOL)
         return pack 
     
     def __twobit(self):
@@ -513,9 +611,20 @@ class Packages():
         buildCmd = self.__bibProjectBuildCmd()
         pack = CPPLibPackage(name, buildCmd, self.dirMaster_, "git", "v2.0.1")
         pack.bibProject_ = True
-        pack.addVersion(url, "develop")
-        pack.addVersion(url, "v2.0.0")
-        pack.addVersion(url, "v2.0.1")
+        if self.args.noInternet:
+            with open(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl'), 'rb') as input:
+                pack = pickle.load(input)
+        elif os.path.exists(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl')):
+            with open(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl'), 'rb') as input:
+                    pack = pickle.load(input)
+        else:
+            pack = CPPLibPackage(name, buildCmd, self.dirMaster_, "git-headeronly", "v0.1")
+            refs = pack.getGitRefs(url)
+            for ref in refs.branches + refs.tags:
+                pack.addVersion(url, ref)
+            Utils.mkdir(os.path.join(self.dirMaster_.cache_dir, name))
+            with open(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl'), 'wb') as output:
+                pickle.dump(pack, output, pickle.HIGHEST_PROTOCOL)
         return pack
     
     def __sharedMutex(self):
@@ -524,9 +633,20 @@ class Packages():
         buildCmd = self.__bibProjectBuildCmd()
         pack = CPPLibPackage(name, buildCmd, self.dirMaster_, "git", "v0.3")
         pack.bibProject_ = True
-        pack.addVersion(url, "develop")
-        pack.addVersion(url, "v0.2")
-        pack.addVersion(url, "v0.3")
+        if self.args.noInternet:
+            with open(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl'), 'rb') as input:
+                pack = pickle.load(input)
+        elif os.path.exists(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl')):
+            with open(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl'), 'rb') as input:
+                    pack = pickle.load(input)
+        else:
+            pack = CPPLibPackage(name, buildCmd, self.dirMaster_, "git-headeronly", "v0.1")
+            refs = pack.getGitRefs(url)
+            for ref in refs.branches + refs.tags:
+                pack.addVersion(url, ref)
+            Utils.mkdir(os.path.join(self.dirMaster_.cache_dir, name))
+            with open(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl'), 'wb') as output:
+                pickle.dump(pack, output, pickle.HIGHEST_PROTOCOL)
         return pack 
       
     def __SeekDeep(self):
@@ -535,10 +655,20 @@ class Packages():
         buildCmd = self.__bibProjectBuildCmd()
         pack = CPPLibPackage(name, buildCmd, self.dirMaster_, "git", "v2.3.1")
         pack.bibProject_ = True
-        pack.addVersion(url, "develop")
-        pack.addVersion(url, "v2.3.0")
-        pack.addVersion(url, "v2.3.1")
-        pack.addVersion(url, "v2.3.2")
+        if self.args.noInternet:
+            with open(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl'), 'rb') as input:
+                pack = pickle.load(input)
+        elif os.path.exists(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl')):
+            with open(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl'), 'rb') as input:
+                    pack = pickle.load(input)
+        else:
+            pack = CPPLibPackage(name, buildCmd, self.dirMaster_, "git-headeronly", "v0.1")
+            refs = pack.getGitRefs(url)
+            for ref in refs.branches + refs.tags:
+                pack.addVersion(url, ref)
+            Utils.mkdir(os.path.join(self.dirMaster_.cache_dir, name))
+            with open(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl'), 'wb') as output:
+                pickle.dump(pack, output, pickle.HIGHEST_PROTOCOL)
         return pack
     
     def __SeekDeepDev(self):
@@ -547,7 +677,20 @@ class Packages():
         buildCmd = self.__bibProjectBuildCmd()
         pack = CPPLibPackage(name, buildCmd, self.dirMaster_, "git", "master")
         pack.bibProject_ = True
-        pack.addVersion(url, "master")
+        if self.args.noInternet:
+            with open(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl'), 'rb') as input:
+                pack = pickle.load(input)
+        elif os.path.exists(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl')):
+            with open(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl'), 'rb') as input:
+                    pack = pickle.load(input)
+        else:
+            pack = CPPLibPackage(name, buildCmd, self.dirMaster_, "git-headeronly", "v0.1")
+            refs = pack.getGitRefs(url)
+            for ref in refs.branches + refs.tags:
+                pack.addVersion(url, ref)
+            Utils.mkdir(os.path.join(self.dirMaster_.cache_dir, name))
+            with open(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl'), 'wb') as output:
+                pickle.dump(pack, output, pickle.HIGHEST_PROTOCOL)
         return pack
     
     def __seqserver(self):
@@ -556,9 +699,20 @@ class Packages():
         buildCmd = self.__bibProjectBuildCmd()
         pack = CPPLibPackage(name, buildCmd, self.dirMaster_, "git", "v1.3.1")
         pack.bibProject_ = True
-        pack.addVersion(url, "develop")
-        pack.addVersion(url, "v1.3.0")
-        pack.addVersion(url, "v1.3.1")
+        if self.args.noInternet:
+            with open(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl'), 'rb') as input:
+                pack = pickle.load(input)
+        elif os.path.exists(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl')):
+            with open(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl'), 'rb') as input:
+                    pack = pickle.load(input)
+        else:
+            pack = CPPLibPackage(name, buildCmd, self.dirMaster_, "git-headeronly", "v0.1")
+            refs = pack.getGitRefs(url)
+            for ref in refs.branches + refs.tags:
+                pack.addVersion(url, ref)
+            Utils.mkdir(os.path.join(self.dirMaster_.cache_dir, name))
+            with open(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl'), 'wb') as output:
+                pickle.dump(pack, output, pickle.HIGHEST_PROTOCOL)
         return pack
     
     def __njhRInside(self):
@@ -567,8 +721,20 @@ class Packages():
         buildCmd = self.__bibProjectBuildCmd()
         pack = CPPLibPackage(name, buildCmd, self.dirMaster_, "git", "1.1.1")
         pack.bibProject_ = True
-        pack.addVersion(url, "develop")
-        pack.addVersion(url, "1.1.1")
+        if self.args.noInternet:
+            with open(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl'), 'rb') as input:
+                pack = pickle.load(input)
+        elif os.path.exists(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl')):
+            with open(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl'), 'rb') as input:
+                    pack = pickle.load(input)
+        else:
+            pack = CPPLibPackage(name, buildCmd, self.dirMaster_, "git-headeronly", "v0.1")
+            refs = pack.getGitRefs(url)
+            for ref in refs.branches + refs.tags:
+                pack.addVersion(url, ref)
+            Utils.mkdir(os.path.join(self.dirMaster_.cache_dir, name))
+            with open(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl'), 'wb') as output:
+                pickle.dump(pack, output, pickle.HIGHEST_PROTOCOL)
         return pack
     
     def __bibcpp(self):
@@ -577,20 +743,23 @@ class Packages():
         buildCmd = self.__bibProjectBuildCmd()
         pack = CPPLibPackage(name, buildCmd, self.dirMaster_, "git", "v2.3.0")
         pack.bibProject_ = True
-        pack.addVersion(url, "develop")
-        pack.versions_["develop"].additionalLdFlags_ = ["-lpthread", "-lz"]
-        if not Utils.isMac():
-            pack.versions_["develop"].additionalLdFlags_.append("-lrt")
-            
-        pack.addVersion(url, "v2.3.0")
-        pack.versions_["v2.3.0"].additionalLdFlags_ = ["-lpthread", "-lz"]
-        if not Utils.isMac():
-            pack.versions_["v2.3.0"].additionalLdFlags_.append("-lrt")
-            
-        pack.addVersion(url, "v2.3.1")
-        pack.versions_["v2.3.1"].additionalLdFlags_ = ["-lpthread", "-lz"]
-        if not Utils.isMac():
-            pack.versions_["v2.3.1"].additionalLdFlags_.append("-lrt")
+        if self.args.noInternet:
+            with open(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl'), 'rb') as input:
+                pack = pickle.load(input)
+        elif os.path.exists(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl')):
+            with open(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl'), 'rb') as input:
+                    pack = pickle.load(input)
+        else:
+            pack = CPPLibPackage(name, buildCmd, self.dirMaster_, "git-headeronly", "v0.1")
+            refs = pack.getGitRefs(url)
+            for ref in refs.branches + refs.tags:
+                pack.addVersion(url, ref)
+                pack.versions_[ref].additionalLdFlags_ = ["-lpthread", "-lz"]
+                if not Utils.isMac():
+                    pack.versions_[ref].additionalLdFlags_.append("-lrt")
+            Utils.mkdir(os.path.join(self.dirMaster_.cache_dir, name))
+            with open(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl'), 'wb') as output:
+                pickle.dump(pack, output, pickle.HIGHEST_PROTOCOL)
         return pack
 
     def __boost(self):
@@ -1355,7 +1524,7 @@ class Setup:
                 else:
                     fnp = Utils.get_file_if_size_diff(url, dest)
                 
-        if os.listdir(os.path.join(self.dirMaster_.base_dir, "temp")) == []:
+        if os.path.exists(os.path.join(self.dirMaster_.base_dir, "temp")) and os.listdir(os.path.join(self.dirMaster_.base_dir, "temp")) == []:
             shutil.rmtree(os.path.join(self.dirMaster_.base_dir, "temp"))
         print ("Now run \"./setup.py --compfile compfile.mk --outMakefile makefile-common.mk --noInternet\" to build libraries")
 
@@ -1391,6 +1560,9 @@ class Setup:
             if not gitWhich:
                 print "Can't find git"
             raise Exception("")
+    def clearCache(self):
+        Utils.rm_rf(self.dirMaster_.cache_dir)
+        Utils.mkdir(self.dirMaster_.cache_dir)
 
 def ubuntu(self):
         pkgs = """libbz2-dev python2.7-dev cmake libpcre3-dev zlib1g-dev libgcrypt11-dev libicu-dev
@@ -1418,6 +1590,7 @@ def parse_args():
     parser.add_argument('--noInternet', action = 'store_true')
     parser.add_argument('--justDownload', action = 'store_true')
     parser.add_argument('--verbose', action = 'store_true')
+    parser.add_argument('--clearCache', action = 'store_true')
     return parser.parse_args()
 
 
@@ -1425,6 +1598,8 @@ def parse_args():
 def main():
     args = parse_args()
     s = Setup(args)
+    if args.clearCache:
+        s.clearCache()
     s.externalChecks()
     if(args.instRPackageName):
         s.installRPackageName(args.instRPackageName[0], s.packages_["r"].defaultVersion_)
