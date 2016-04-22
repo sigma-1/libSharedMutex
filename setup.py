@@ -707,7 +707,6 @@ class Packages():
         pack = CPPLibPackage(name, buildCmd, self.dirMaster_, "git", "master")
         pack.bibProject_ = True
         try:
-            raise Exception("this")
             if self.args.noInternet:
                 with open(os.path.join(self.dirMaster_.cache_dir, name, name + '.pkl'), 'rb') as input:
                     pack = pickle.load(input)
