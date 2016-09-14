@@ -1,11 +1,3 @@
-#pragma once
-/*
- * __mutex_base.hpp
- *
- *  Created on: Feb 26, 2016
- *      Author: nick
- */
-
 // -*- C++ -*-
 //===----------------------------------------------------------------------===//
 //
@@ -314,6 +306,7 @@ public:
 
     template <class _Rep, class _Period, class _Predicate>
         bool
+        _LIBCPP_INLINE_VISIBILITY
         wait_for(unique_lock<mutex>& __lk,
                  const chrono::duration<_Rep, _Period>& __d,
                  _Predicate __pred);
@@ -398,7 +391,7 @@ condition_variable::wait_for(unique_lock<mutex>& __lk,
 }
 
 template <class _Rep, class _Period, class _Predicate>
-inline _LIBCPP_INLINE_VISIBILITY
+inline
 bool
 condition_variable::wait_for(unique_lock<mutex>& __lk,
                              const chrono::duration<_Rep, _Period>& __d,
@@ -413,8 +406,3 @@ condition_variable::wait_for(unique_lock<mutex>& __lk,
 _LIBCPP_END_NAMESPACE_STD
 
 #endif  // _LIBCPP___MUTEX_BASE
-
-
-
-
-

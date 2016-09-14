@@ -1,14 +1,3 @@
-#pragma once
-/*
- * __undef_min_max.hpp
- *
- *  Created on: Feb 26, 2016
- *      Author: nick
- */
-
-
-
-
 // -*- C++ -*-
 //===----------------------------------------------------------------------===//
 //
@@ -38,5 +27,4 @@ _LIBCPP_WARNING("macro max is incompatible with C++.  Try #define NOMINMAX "
 #endif
 #undef max
 #endif
-
 
