@@ -40,4 +40,9 @@
 .\#*
 
 compfile.mk
+makefile-common.mk
 bin
+build
+external
+lib
+SharedMutex
