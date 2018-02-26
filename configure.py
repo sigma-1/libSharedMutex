@@ -6,7 +6,7 @@ sys.path.append("scripts/setUpScripts")
 from utils import Utils
 from genFuncs import genHelper
 def main():
-    name = "sharedMutex"
+    name = "SharedMutex"
     libs = ""
     args = genHelper.parseNjhConfigureArgs()
     cmd = genHelper.mkConfigCmd(name, libs, sys.argv)

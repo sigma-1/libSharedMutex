@@ -320,7 +320,7 @@ class Packages():
         if "twobit" in libsNeeded:
             self.packages_["twobit"] = self.__twobit()
         if "sharedmutex" in libsNeeded:
-            self.packages_["sharedmutex"] = self.__sharedMutex()
+            self.packages_["sharedmutex"] = self.__SharedMutex()
         if "bhtsne" in libsNeeded:
             self.packages_["bhtsne"] = self.__bhtsne()
         #developer, private repos
@@ -1139,9 +1139,9 @@ class Packages():
                 pickle.dump(pack, output, pickle.HIGHEST_PROTOCOL)
         return pack
     
-    def __sharedMutex(self):
-        url = "https://github.com/nickjhathaway/cpp_shared_mutex.git"
-        name = "sharedMutex"
+    def __SharedMutex(self):
+        url = "https://github.com/sigma-1/libSharedMutex.git"
+        name = "SharedMutex"
         buildCmd = self.__bibProjectBuildCmd()
         pack = CPPLibPackage(name, buildCmd, self.dirMaster_, "git", "v0.3")
         pack.bibProject_ = True
@@ -1702,7 +1702,7 @@ class Setup:
                        "mongoc": self.mongoc,
                        "mongocxx": self.mongocxx,
                        "twobit" : self.twobit,
-                       "sharedmutex" : self.sharedMutex,
+                       "sharedmutex" : self.SharedMutex,
                        "mathgl": self.mathgl,
                        "magic": self.magic,
                        "zlib": self.zlib,
@@ -2214,7 +2214,7 @@ class Setup:
     def twobit(self, version):
         self.__defaultBibBuild("twobit", version)
                 
-    def sharedMutex(self, version):
+    def SharedMutex(self, version):
         self.__defaultBibBuild("sharedmutex", version)
             
     def SeekDeep(self, version):
